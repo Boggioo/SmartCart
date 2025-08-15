@@ -30,13 +30,42 @@ class LoginActivity : AppCompatActivity() {
 
         session = SessionManager(this)
 
-        // Controlla se l'utente è già loggato
-        if (session.getToken() != null) {
-            startActivity(Intent(this, ListActivity::class.java))
-            finish()
-            return
-        }
+        // DEBUG: Cancella i dati di sessione per forzare il login durante lo sviluppo
+        // session.clear()
 
+        if (session.isLoggedIn()) {
+            // Verifica se il token è ancora valido
+            validateToken()
+        } else {
+            initViews()
+        }
+    }
+
+    private fun validateToken() {
+        val token = "Bearer ${session.getToken()}"
+        RetrofitClient.api().validateToken(token).enqueue(object : Callback<Map<String, Any>> {
+            override fun onResponse(call: Call<Map<String, Any>>, response: Response<Map<String, Any>>) {
+                if (response.isSuccessful) {
+                    // Token valido, vai alla lista
+                    startActivity(Intent(this@LoginActivity, ListActivity::class.java))
+                    finish()
+                } else {
+                    // Token non valido, mostra login
+                    session.clear()
+                    initViews()
+                }
+            }
+
+            override fun onFailure(call: Call<Map<String, Any>>, t: Throwable) {
+                // Errore di rete, mostra login
+                session.clear()
+                initViews()
+                Toast.makeText(this@LoginActivity, "Errore di rete", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    private fun initViews() {
         etEmail = findViewById(R.id.etEmail)
         etPassword = findViewById(R.id.etPassword)
         btnLogin = findViewById(R.id.btnLogin)
@@ -67,7 +96,7 @@ class LoginActivity : AppCompatActivity() {
                 if (response.isSuccessful && response.body() != null) {
                     val map = response.body()!!
 
-                    // Gestione tipo di dato per user_id (potrebbe essere Double o Int)
+                    // Gestione tipo di dato per user_id
                     val userId = when (val id = map["user_id"]) {
                         is Double -> id.toInt()
                         is Int -> id

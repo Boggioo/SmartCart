@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
 import android.os.Bundle
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
@@ -20,6 +21,7 @@ import com.example.smartcart.data.model.Item
 import com.example.smartcart.data.model.ItemRequest
 import com.example.smartcart.data.model.Supermarket
 import com.example.smartcart.data.network.RetrofitClient
+import com.example.smartcart.ui.login.LoginActivity
 import com.example.smartcart.ui.profile.ProfileActivity
 import retrofit2.Call
 import retrofit2.Callback
@@ -94,12 +96,33 @@ class ListActivity : AppCompatActivity() {
         btnRefresh.setOnClickListener {
             loadItems()
         }
+
+        // Pulsante temporaneo per logout (DEBUG)
+        val btnDebugLogout = Button(this).apply {
+            text = "LOGOUT (DEBUG)"
+            setOnClickListener {
+                session.clear()
+                startActivity(Intent(this@ListActivity, LoginActivity::class.java))
+                finish()
+            }
+        }
+        addContentView(btnDebugLogout, ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ))
     }
 
     private fun loadItems() {
         val token = "Bearer ${session.getToken()}"
         RetrofitClient.api().getItems(token).enqueue(object : Callback<List<Item>> {
             override fun onResponse(call: Call<List<Item>>, response: Response<List<Item>>) {
+                if (response.code() == 401) { // Non autorizzato
+                    session.clear()
+                    startActivity(Intent(this@ListActivity, LoginActivity::class.java))
+                    finish()
+                    return
+                }
+
                 if (response.isSuccessful) {
                     response.body()?.let {
                         itemAdapter.setData(it.toMutableList())

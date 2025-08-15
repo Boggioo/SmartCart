@@ -14,4 +14,8 @@ class SessionManager(ctx: Context) {
     fun getUserId(): Int = prefs.getInt("user_id", -1)
 
     fun clear() { prefs.edit().clear().apply() }
+
+    fun isLoggedIn(): Boolean {
+        return !getToken().isNullOrEmpty() && getUserId() != -1
+    }
 }

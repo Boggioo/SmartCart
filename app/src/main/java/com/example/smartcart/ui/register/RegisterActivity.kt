@@ -1,4 +1,4 @@
-package com.example.smartcart.ui.auth
+package com.example.smartcart.ui.register
 
 import android.content.Intent
 import android.os.Bundle
@@ -67,3 +67,4 @@ class RegisterActivity : AppCompatActivity() {
         })
     }
 }
+

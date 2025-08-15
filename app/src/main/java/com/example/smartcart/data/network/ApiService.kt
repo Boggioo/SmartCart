@@ -1,5 +1,6 @@
 package com.example.smartcart.data.network
 
+import com.example.smartcart.data.model.AuthResponse
 import com.example.smartcart.data.model.Item
 import com.example.smartcart.data.model.ItemRequest
 import com.example.smartcart.data.model.Supermarket
@@ -13,6 +14,10 @@ interface ApiService {
 
     @POST("/auth/register")
     fun register(@Body body: Map<String, String>): Call<Map<String, Any>>
+
+    // Aggiunto endpoint per validare il token
+    @GET("/auth/validate")
+    fun validateToken(@Header("Authorization") token: String): Call<Map<String, Any>>
 
     @GET("/items")
     fun getItems(@Header("Authorization") token: String): Call<List<Item>>
