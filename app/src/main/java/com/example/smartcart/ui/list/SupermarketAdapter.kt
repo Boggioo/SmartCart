@@ -6,8 +6,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.smartcart.R
-
-data class Supermarket(val name: String, val lat: Double, val lon: Double)
+import com.example.smartcart.data.model.Supermarket
 
 class SupermarketAdapter(
     private var data: MutableList<Supermarket>
@@ -24,7 +23,7 @@ class SupermarketAdapter(
 
     override fun onBindViewHolder(holder: VH, position: Int) {
         val item = data[position]
-        holder.textName.text = item.name
+        holder.textName.text = "${item.name} - ${"%.2f".format(item.distance)} km"
     }
 
     override fun getItemCount(): Int = data.size
