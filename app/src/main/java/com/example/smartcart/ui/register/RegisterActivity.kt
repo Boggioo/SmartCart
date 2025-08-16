@@ -9,7 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.smartcart.R
 import com.example.smartcart.data.SessionManager
 import com.example.smartcart.data.network.RetrofitClient
-import com.example.smartcart.ui.login.LoginActivity
+import com.example.smartcart.ui.list.ListActivity
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -74,7 +74,8 @@ class RegisterActivity : AppCompatActivity() {
                         session.saveUserName(name)
 
                         Toast.makeText(this@RegisterActivity, "Registrazione riuscita", Toast.LENGTH_SHORT).show()
-                        startActivity(Intent(this@RegisterActivity, ListActivity::class.java))
+                        val intent = Intent(this@RegisterActivity, ListActivity::class.java)
+                        startActivity(intent)
                         finish()
                     } else {
                         Toast.makeText(this@RegisterActivity, "Errore nei dati di registrazione", Toast.LENGTH_SHORT).show()

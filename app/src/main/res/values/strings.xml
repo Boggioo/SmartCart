@@ -1,3 +1,5 @@
 <resources>
-    <string name="app_name">SmartCart</string>
+    <!-- ... altre stringhe ... -->
+    <string name="total_items">Totale articoli: %d</string>
+    <string name="total_price">Totale: %.2f€</string>
 </resources>
