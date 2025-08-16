@@ -13,6 +13,9 @@ class SessionManager(ctx: Context) {
     fun saveUserId(id: Int) { prefs.edit().putInt("user_id", id).apply() }
     fun getUserId(): Int = prefs.getInt("user_id", -1)
 
+    fun saveUserName(name: String) { prefs.edit().putString("user_name", name).apply() }
+    fun getUserName(): String? = prefs.getString("user_name", "Utente")
+
     fun clear() { prefs.edit().clear().apply() }
 
     fun isLoggedIn(): Boolean {

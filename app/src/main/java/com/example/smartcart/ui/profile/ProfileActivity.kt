@@ -5,7 +5,6 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
-import android.widget.Toast
 import com.example.smartcart.R
 import com.example.smartcart.data.SessionManager
 import com.example.smartcart.ui.login.LoginActivity
@@ -19,7 +18,7 @@ class ProfileActivity : AppCompatActivity() {
         setContentView(R.layout.activity_profile)
 
         session = SessionManager(this)
-        findViewById<TextView>(R.id.tvEmail).text = "ID Utente: ${session.getUserId()}"
+        findViewById<TextView>(R.id.tvUserName).text = session.getUserName() ?: "Utente"
 
         findViewById<Button>(R.id.btnLogout).setOnClickListener {
             session.clear()

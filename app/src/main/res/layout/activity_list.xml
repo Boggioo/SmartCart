@@ -9,83 +9,61 @@
         android:text="Lista della spesa"
         android:textSize="24sp"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:textColor="@color/black"/>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="8dp">
-
-        <EditText
-            android:id="@+id/editNewItem"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="Aggiungi un prodotto"
-            android:background="@drawable/edittext_bg"/>
+        android:orientation="vertical"
+        android:background="@color/grayLight"
+        android:padding="8dp"
+        android:layout_marginVertical="16dp">
 
         <Button
-            android:id="@+id/btnAddItem"
-            android:text="AGGIUNGI"
-            android:layout_width="wrap_content"
+            android:id="@+id/btnCreateList"
+            android:text="CREA NUOVA LISTA"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"/>
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="16dp">
-
-        <Button
-            android:id="@+id/btnRefresh"
-            android:text="AGGIORNA LISTA"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginEnd="4dp"/>
+            android:layout_marginBottom="8dp"
+            android:backgroundTint="@color/primaryColor"
+            android:textColor="@color/white"
+            android:textAllCaps="false"
+            android:textSize="16sp"/>
 
         <Button
             android:id="@+id/btnNearby"
             android:text="TROVA SUPERMERCATI VICINI"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="4dp"/>
+            android:layout_marginBottom="8dp"
+            android:backgroundTint="@color/secondaryColor"
+            android:textColor="@color/white"
+            android:textAllCaps="false"
+            android:textSize="16sp"/>
+
+        <Button
+            android:id="@+id/btnProfile"
+            android:text="PROFILO UTENTE"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/primaryDarkColor"
+            android:textColor="@color/white"
+            android:textAllCaps="false"
+            android:textSize="16sp"/>
     </LinearLayout>
-
-    <Button
-        android:id="@+id/btnProfile"
-        android:text="PROFILO"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"/>
-
-    <TextView
-        android:text="Articoli"
-        android:textSize="20sp"
-        android:layout_marginTop="16dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerItems"
-        android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:layout_marginTop="8dp"/>
 
     <TextView
         android:text="Supermercati vicini"
         android:textSize="20sp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:textColor="@color/black"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerSupermarkets"
         android:layout_width="match_parent"
-        android:layout_height="200dp"
+        android:layout_height="match_parent"
         android:layout_marginTop="8dp"/>
 </LinearLayout>

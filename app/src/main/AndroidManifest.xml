@@ -16,9 +16,12 @@
         android:theme="@style/Theme.SmartCart">
 
         <activity android:name=".ui.profile.ProfileActivity" />
+        <activity android:name=".ui.list.CreateListActivity" />
         <activity android:name=".ui.register.RegisterActivity" />
         <activity android:name=".ui.list.ListActivity" />
-        <activity android:name=".ui.login.LoginActivity" android:exported="true">
+        <activity
+            android:name=".ui.login.LoginActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>

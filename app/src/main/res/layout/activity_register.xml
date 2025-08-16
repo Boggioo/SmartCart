@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="24dp"
-    android:background="@android:color/white">
+    android:background="@color/white">
 
     <TextView
         android:id="@+id/tvTitle"
@@ -14,7 +14,19 @@
         android:textSize="24sp"
         android:textStyle="bold"
         android:layout_gravity="center_horizontal"
-        android:paddingBottom="16dp"/>
+        android:paddingBottom="16dp"
+        android:textColor="@color/black"/>
+
+    <EditText
+        android:id="@+id/etName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Nome completo"
+        android:inputType="textPersonName"
+        android:padding="12dp"
+        android:background="@drawable/edittext_bg"
+        android:textColor="@color/black"
+        android:textColorHint="@color/grayDark"/>
 
     <EditText
         android:id="@+id/etEmail"
@@ -23,7 +35,10 @@
         android:hint="Email"
         android:inputType="textEmailAddress"
         android:padding="12dp"
-        android:background="@android:drawable/edit_text"/>
+        android:layout_marginTop="12dp"
+        android:background="@drawable/edittext_bg"
+        android:textColor="@color/black"
+        android:textColorHint="@color/grayDark"/>
 
     <EditText
         android:id="@+id/etPassword"
@@ -33,7 +48,9 @@
         android:inputType="textPassword"
         android:padding="12dp"
         android:layout_marginTop="12dp"
-        android:background="@android:drawable/edit_text"/>
+        android:background="@drawable/edittext_bg"
+        android:textColor="@color/black"
+        android:textColorHint="@color/grayDark"/>
 
     <EditText
         android:id="@+id/etConfirmPassword"
@@ -43,12 +60,16 @@
         android:inputType="textPassword"
         android:padding="12dp"
         android:layout_marginTop="12dp"
-        android:background="@android:drawable/edit_text"/>
+        android:background="@drawable/edittext_bg"
+        android:textColor="@color/black"
+        android:textColorHint="@color/grayDark"/>
 
     <Button
         android:id="@+id/btnRegister"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Registrati"
-        android:layout_marginTop="24dp"/>
+        android:layout_marginTop="24dp"
+        android:backgroundTint="@color/primaryColor"
+        android:textColor="@color/white"/>
 </LinearLayout>
