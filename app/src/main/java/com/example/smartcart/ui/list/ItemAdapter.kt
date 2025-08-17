@@ -57,4 +57,14 @@ class ItemAdapter(
         data.removeAt(position)
         notifyItemRemoved(position)
     }
+
+    fun addItem(item: Item) {
+        data.add(0, item)
+        notifyItemInserted(0)
+    }
+
+    fun updateAt(position: Int, item: Item) {
+        data[position] = item
+        notifyItemChanged(position)
+    }
 }
