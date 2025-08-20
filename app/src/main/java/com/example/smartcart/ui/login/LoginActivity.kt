@@ -7,11 +7,17 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.example.smartcart.R
 import com.example.smartcart.data.SessionManager
+import com.example.smartcart.data.local.AppDatabase
+import com.example.smartcart.data.local.UserEntity
 import com.example.smartcart.data.network.RetrofitClient
 import com.example.smartcart.ui.list.ListActivity
 import com.example.smartcart.ui.register.RegisterActivity
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -29,38 +35,73 @@ class LoginActivity : AppCompatActivity() {
         setContentView(R.layout.activity_login)
 
         session = SessionManager(this)
+        
+        // Cancella i dati di sessione per richiedere sempre il login
+        session.clear()
+        
+        // Inizializza le viste per il login manuale
+        initViews()
+    }
 
-        // DEBUG: Cancella i dati di sessione per forzare il login durante lo sviluppo
-        // session.clear()
-
-        if (session.isLoggedIn()) {
-            // Verifica se il token è ancora valido
-            validateToken()
-        } else {
-            initViews()
+    private fun attemptAutoLoginFromDb() {
+        lifecycleScope.launch {
+            try {
+                val saved = withContext(Dispatchers.IO) {
+                    AppDatabase.get(this@LoginActivity).userDao().getCurrentUser()
+                }
+                if (saved != null && !saved.token.isNullOrEmpty()) {
+                    // Log per debug
+                    android.util.Log.d("LoginActivity", "Utente trovato nel DB: ${saved.name}, token: ${saved.token}")
+                    
+                    session.saveUserId(saved.id)
+                    session.saveToken(saved.token)
+                    session.saveUserName(saved.name)
+                    validateToken()
+                } else {
+                    android.util.Log.d("LoginActivity", "Nessun utente trovato nel DB o token non valido")
+                    initViews()
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("LoginActivity", "Errore durante il recupero dell'utente dal DB: ${e.message}", e)
+                initViews()
+            }
         }
     }
 
     private fun validateToken() {
         val token = "Bearer ${session.getToken()}"
+        android.util.Log.d("LoginActivity", "Validazione token: $token")
+        
         RetrofitClient.api().validateToken(token).enqueue(object : Callback<Map<String, Any>> {
             override fun onResponse(call: Call<Map<String, Any>>, response: Response<Map<String, Any>>) {
                 if (response.isSuccessful) {
                     // Token valido, vai alla lista
+                    android.util.Log.d("LoginActivity", "Token valido, accesso alla lista")
                     startActivity(Intent(this@LoginActivity, ListActivity::class.java))
                     finish()
                 } else {
                     // Token non valido, mostra login
+                    android.util.Log.d("LoginActivity", "Token non valido (${response.code()}), mostra login")
+                    // Rimuovi l'utente dal database locale
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        try {
+                            AppDatabase.get(this@LoginActivity).userDao().clear()
+                            android.util.Log.d("LoginActivity", "Utente rimosso dal DB")
+                        } catch (e: Exception) {
+                            android.util.Log.e("LoginActivity", "Errore durante la rimozione dell'utente dal DB: ${e.message}", e)
+                        }
+                    }
                     session.clear()
                     initViews()
                 }
             }
 
             override fun onFailure(call: Call<Map<String, Any>>, t: Throwable) {
-                // Errore di rete, mostra login
-                session.clear()
+                // Errore di rete, mostra login ma non cancellare le credenziali
+                // In caso di errore di rete, potremmo voler mantenere le credenziali per un nuovo tentativo
+                android.util.Log.e("LoginActivity", "Errore di rete durante la validazione del token: ${t.message}", t)
                 initViews()
-                Toast.makeText(this@LoginActivity, "Errore di rete", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@LoginActivity, "Errore di rete: ${t.message}", Toast.LENGTH_SHORT).show()
             }
         })
     }
@@ -108,6 +149,19 @@ class LoginActivity : AppCompatActivity() {
                     if (token != null && userId != -1) {
                         session.saveToken(token)
                         session.saveUserId(userId)
+                        // Persist user locally for auto-login
+                        val name = map["name"] as? String ?: "Utente"
+                        session.saveUserName(name) // Salva il nome utente nella SessionManager
+                        val emailSafe = etEmail.text.toString().trim()
+                        lifecycleScope.launch(Dispatchers.IO) {
+                            try {
+                                AppDatabase.get(this@LoginActivity).userDao()
+                                    .upsert(UserEntity(id = userId, name = name, email = emailSafe, token = token))
+                                android.util.Log.d("LoginActivity", "Utente salvato nel DB: $name, token: $token")
+                            } catch (e: Exception) {
+                                android.util.Log.e("LoginActivity", "Errore durante il salvataggio dell'utente nel DB: ${e.message}", e)
+                            }
+                        }
 
                         Toast.makeText(this@LoginActivity, "Login riuscito", Toast.LENGTH_SHORT).show()
                         startActivity(Intent(this@LoginActivity, ListActivity::class.java))

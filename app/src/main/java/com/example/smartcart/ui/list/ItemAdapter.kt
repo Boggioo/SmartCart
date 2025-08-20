@@ -1,5 +1,6 @@
 package com.example.smartcart.ui.list
 
+import android.graphics.Paint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,7 +13,8 @@ import com.example.smartcart.data.model.Item
 
 class ItemAdapter(
     private val data: MutableList<Item>,
-    private val listener: ItemListener
+    private val listener: ItemListener,
+    private val isCompletedList: Boolean = false
 ) : RecyclerView.Adapter<ItemAdapter.ViewHolder>() {
 
     interface ItemListener {
@@ -36,6 +38,13 @@ class ItemAdapter(
         val item = data[position]
         holder.textName.text = "${item.name} (x${item.quantity})"
         holder.checkBox.isChecked = item.checked
+        
+        // Applica il testo barrato se l'elemento è nella lista dei completati
+        if (isCompletedList) {
+            holder.textName.paintFlags = holder.textName.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
+        } else {
+            holder.textName.paintFlags = holder.textName.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
+        }
 
         holder.checkBox.setOnClickListener {
             listener.onToggleChecked(item, position)

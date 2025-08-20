@@ -5,10 +5,10 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
-import android.widget.Toast
 import com.example.smartcart.R
 import com.example.smartcart.data.SessionManager
 import com.example.smartcart.ui.login.LoginActivity
+import com.example.smartcart.ui.profile.SharedListsActivity
 
 class ProfileActivity : AppCompatActivity() {
 
@@ -28,7 +28,7 @@ class ProfileActivity : AppCompatActivity() {
         }
 
         findViewById<Button>(R.id.btnSharedLists).setOnClickListener {
-            Toast.makeText(this, "Liste condivise (da implementare)", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, SharedListsActivity::class.java))
         }
     }
 }

@@ -55,7 +55,20 @@
             android:text="PROFILO UTENTE"
             android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:backgroundTint="@color/primaryDarkColor"
+            android:backgroundTint="@color/primaryColor"
+            android:textColor="@color/white"
+            android:textAllCaps="false"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp"
+            android:elevation="2dp"/>
+            
+        <Button
+            android:id="@+id/btnSharedLists"
+            android:text="LISTE CONDIVISE CON ME"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:backgroundTint="@color/secondaryColor"
             android:textColor="@color/white"
             android:textAllCaps="false"
             android:textSize="16sp"

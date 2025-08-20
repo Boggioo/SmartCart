@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.kapt")
 }
 
 android {
@@ -44,4 +45,20 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
     implementation 'com.google.android.gms:play-services-location:21.3.0'
+    // OpenStreetMap dependencies
+    implementation 'org.osmdroid:osmdroid-android:6.1.17'
+    implementation('org.osmdroid:osmdroid-mapsforge:6.1.17') {
+        exclude group: 'com.j256.ormlite', module: 'ormlite-android'
+        exclude group: 'com.j256.ormlite', module: 'ormlite-core'
+    }
+    implementation('org.osmdroid:osmdroid-geopackage:6.1.17') {
+        exclude group: 'com.j256.ormlite', module: 'ormlite-android'
+        exclude group: 'com.j256.ormlite', module: 'ormlite-core'
+    }
+
+    // Room
+    def room_version = "2.6.1"
+    implementation "androidx.room:room-runtime:$room_version"
+    kapt "androidx.room:room-compiler:$room_version"
+    implementation "androidx.room:room-ktx:$room_version"
 }
