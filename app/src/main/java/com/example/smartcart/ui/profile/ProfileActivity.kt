@@ -7,8 +7,8 @@ import android.widget.Button
 import android.widget.TextView
 import com.example.smartcart.R
 import com.example.smartcart.data.SessionManager
-import com.example.smartcart.ui.login.LoginActivity
-import com.example.smartcart.ui.profile.SharedListsActivity
+import com.example.smartcart.ui.auth.LoginActivity
+import com.example.smartcart.ui.profile.MyListsActivity
 
 class ProfileActivity : AppCompatActivity() {
 
@@ -28,7 +28,7 @@ class ProfileActivity : AppCompatActivity() {
         }
 
         findViewById<Button>(R.id.btnSharedLists).setOnClickListener {
-            startActivity(Intent(this, SharedListsActivity::class.java))
+            startActivity(Intent(this, MyListsActivity::class.java))
         }
     }
 }

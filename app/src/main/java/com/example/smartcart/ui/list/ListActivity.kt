@@ -23,9 +23,6 @@ class ListActivity : AppCompatActivity() {
     private lateinit var btnCreateList: Button
     private lateinit var btnProfile: Button
     private lateinit var btnSharedLists: Button
-    private lateinit var tvNoLists: TextView
-    private lateinit var recyclerView: RecyclerView
-    private lateinit var adapter: ListAdapter
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_list)
@@ -37,24 +34,14 @@ class ListActivity : AppCompatActivity() {
         btnCreateList = findViewById(R.id.btnCreateList)
         btnProfile = findViewById(R.id.btnProfile)
         btnSharedLists = findViewById(R.id.btnSharedLists)
-        tvNoLists = findViewById(R.id.tvNoLists)
-        recyclerView = findViewById(R.id.recyclerView)
-
-        // Configurazione del RecyclerView
-        recyclerView.layoutManager = LinearLayoutManager(this)
-        adapter = ListAdapter { listId ->
-            val intent = Intent(this, CreatedListActivity::class.java)
-            intent.putExtra("listId", listId)
-            startActivity(intent)
-        }
-        recyclerView.adapter = adapter
         
         // Setup click listeners per i bottoni
         setupButtons()
         
         // Gestione del pulsante per accedere alle liste condivise
         btnSharedLists.setOnClickListener {
-            val intent = Intent(this, SharedListsActivity::class.java)
+            // Utilizziamo il percorso completo per evitare ambiguità tra le due classi
+            val intent = Intent(this, com.example.smartcart.ui.list.SharedListsActivity::class.java)
             startActivity(intent)
         }
     }
@@ -109,7 +96,7 @@ class ListActivity : AppCompatActivity() {
         // Verifica che il token sia valido
         if (session.getToken().isNullOrEmpty()) {
             android.widget.Toast.makeText(this, "Sessione scaduta, effettua nuovamente il login", android.widget.Toast.LENGTH_SHORT).show()
-            startActivity(Intent(this, com.example.smartcart.ui.login.LoginActivity::class.java))
+            startActivity(Intent(this, com.example.smartcart.ui.auth.LoginActivity::class.java))
             finish()
             return
         }

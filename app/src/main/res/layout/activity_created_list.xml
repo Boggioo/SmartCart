@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:orientation="vertical"
+	android:padding="16dp"
+	android:background="@color/white">
+
+	<EditText
+		android:id="@+id/etItemName"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:hint="Oggetto o alimento"
+		android:inputType="textCapSentences"
+		android:background="@drawable/edittext_bg"
+		android:padding="12dp"
+		android:layout_marginBottom="8dp" />
+
+	<EditText
+		android:id="@+id/etQuantity"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:hint="Quantità"
+		android:inputType="number"
+		android:text="1"
+		android:background="@drawable/edittext_bg"
+		android:padding="12dp"
+		android:layout_marginBottom="12dp" />
+
+	<Button
+		android:id="@+id/btnAddItem"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:text="Aggiungi"
+		android:textAllCaps="false"
+		android:textStyle="bold"
+		android:backgroundTint="@color/primaryColor"
+		android:textColor="@color/white"
+		android:layout_marginBottom="12dp" />
+		
+	<Button
+		android:id="@+id/btnShareList"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:text="Condividi lista"
+		android:textAllCaps="false"
+		android:textStyle="bold"
+		android:backgroundTint="@color/secondaryColor"
+		android:textColor="@color/white"
+		android:layout_marginBottom="12dp" />
+
+	<TextView
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:text="Da comprare"
+		android:textStyle="bold"
+		android:textSize="16sp"
+		android:layout_marginTop="8dp"
+		android:layout_marginBottom="4dp" />
+
+	<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+		android:id="@+id/swipeRefreshLayout"
+		android:layout_width="match_parent"
+		android:layout_height="0dp"
+		android:layout_weight="1">
+
+		<LinearLayout
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			android:orientation="vertical">
+
+			<androidx.recyclerview.widget.RecyclerView
+				android:id="@+id/recyclerView"
+				android:layout_width="match_parent"
+				android:layout_height="0dp"
+				android:layout_weight="0.6"
+				android:layout_marginBottom="8dp" />
+
+			<TextView
+				android:id="@+id/tvCompletedHeader"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:text="Completati"
+				android:textStyle="bold"
+				android:textSize="16sp"
+				android:layout_marginTop="8dp"
+				android:layout_marginBottom="4dp" />
+
+			<androidx.recyclerview.widget.RecyclerView
+				android:id="@+id/recyclerViewCompleted"
+				android:layout_width="match_parent"
+				android:layout_height="0dp"
+				android:layout_weight="0.4" />
+		</LinearLayout>
+	</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+</LinearLayout>

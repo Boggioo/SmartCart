@@ -72,4 +72,13 @@
         android:layout_marginTop="24dp"
         android:backgroundTint="@color/primaryColor"
         android:textColor="@color/white"/>
+        
+    <TextView
+        android:id="@+id/tvLoginLink"
+        android:text="Hai già un account? Accedi"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_gravity="center_horizontal"
+        android:textColor="@color/grayDark"/>
 </LinearLayout>

@@ -76,7 +76,7 @@ interface ApiService {
     @POST("/lists/share")
     fun shareList(
         @Header("Authorization") token: String,
-        @Body body: Map<String, Any>
+        @Body body: Map<String, String>
     ): Call<Map<String, Any>>
     
     @GET("/lists/shared")
