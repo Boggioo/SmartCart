@@ -66,16 +66,16 @@ object RetrofitClient {
         val clientBuilder = OkHttpClient.Builder()
             .addInterceptor(logger)
             .addInterceptor(customInterceptor)
-            .connectTimeout(15, TimeUnit.SECONDS)
-            .readTimeout(15, TimeUnit.SECONDS)
-            .writeTimeout(15, TimeUnit.SECONDS)
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(10, TimeUnit.SECONDS)
+            .writeTimeout(10, TimeUnit.SECONDS)
         
         // Avvia la ricerca del server in background
         Thread {
             try {
-                // Ottieni l'indirizzo IP del server
-                val serverUrl = findServerUrl(context)
-                Log.d(TAG, "Server URL trovato: $serverUrl")
+                // Scopri automaticamente l'IP del server Flask
+                val serverUrl = discoverFlaskServer(context)
+                Log.d(TAG, "Server Flask scoperto: $serverUrl")
                 
                 // Aggiorna l'istanza Retrofit con l'URL trovato
                 synchronized(this) {
@@ -85,17 +85,18 @@ object RetrofitClient {
                         .addConverterFactory(GsonConverterFactory.create(gson))
                         .client(clientBuilder.build())
                         .build()
+                    Log.d(TAG, "Retrofit aggiornato con nuovo URL: $baseUrl")
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Errore durante l'inizializzazione di Retrofit: ${e.message}")
+                Log.e(TAG, "Errore durante la scoperta del server: ${e.message}")
             }
         }.start()
         
-        // Crea un'istanza Retrofit iniziale con un URL di fallback
+        // Crea un'istanza Retrofit iniziale con un URL di fallback temporaneo
         // per evitare che l'app si blocchi durante la ricerca del server
-        val fallbackUrl = "http://192.168.1.99:$SERVER_PORT/"
+        val fallbackUrl = "http://127.0.0.1:$SERVER_PORT/"
         baseUrl = fallbackUrl
-        Log.d(TAG, "URL iniziale (fallback): $baseUrl")
+        Log.d(TAG, "URL iniziale (temporaneo): $baseUrl")
         
         retrofit = Retrofit.Builder()
             .baseUrl(baseUrl)
@@ -104,74 +105,99 @@ object RetrofitClient {
             .build()
     }
     
-    // Trova l'URL del server tramite scansione della rete locale
-    private fun findServerUrl(context: Context): String {
-        // Lista di possibili indirizzi IP da provare in ordine di priorità
-        val possibleIps = mutableListOf<String>()
+    // Scopre automaticamente l'IP del server Flask scansionando la rete locale
+    private fun discoverFlaskServer(context: Context): String {
+        Log.d(TAG, "Avvio scoperta automatica del server Flask...")
         
-        // 1. Aggiungi IP prioritari dal server attuale
-        possibleIps.add("192.168.1.99")  // IP attuale del server Flask
-        possibleIps.add("10.0.2.2")      // Emulatore Android -> localhost del PC host
-        possibleIps.add("localhost")     // Localhost
-        possibleIps.add("127.0.0.1")     // Localhost alternativo
+        // 1. Prima prova gli IP standard
+        val standardIps = listOf(
+            "10.0.2.2",      // Android emulator localhost
+            "127.0.0.1",     // Localhost IP
+            "localhost"       // Localhost standard
+        )
         
-        // 2. Aggiungi l'IP del dispositivo
-        getHostIpAddress(context)?.let { deviceIp ->
-            possibleIps.add(deviceIp)
-            
-            // 3. Aggiungi IP nella stessa subnet del dispositivo
-            val ipParts = deviceIp.split(".")
-            if (ipParts.size == 4) {
-                val subnet = "${ipParts[0]}.${ipParts[1]}.${ipParts[2]}"
-                // Scansiona gli IP nella stessa subnet
-                for (i in 1..254) {
-                    possibleIps.add("$subnet.$i")
-                }
-            }
-        }
-        
-        // 4. Aggiungi IP specifici dai log
-        possibleIps.add("192.168.1.251") // IP precedente dai log
-        
-        // Filtra gli IP null e prova a connettersi a ciascuno
-        val validIps = possibleIps.filterNotNull().distinct()
-        
-        for (ip in validIps) {
-            val url = "http://$ip:$SERVER_PORT/"
-            Log.d(TAG, "Tentativo di connessione a: $url")
-            
-            // Verifica se il server Flask è raggiungibile a questo IP
+        for (ip in standardIps) {
+            Log.d(TAG, "Provo IP standard: $ip:$SERVER_PORT")
             if (isFlaskServerRunning(ip)) {
-                Log.d(TAG, "Server Flask trovato all'indirizzo: $ip")
-                return url
+                val serverUrl = "http://$ip:$SERVER_PORT/"
+                Log.d(TAG, "Server Flask trovato su IP standard: $serverUrl")
+                return serverUrl
             }
         }
         
-        // Se nessun IP funziona, usa l'ultimo IP nei log come fallback
-        val fallbackIp = "192.168.1.99" // IP attuale del server Flask
-        Log.d(TAG, "Nessun server raggiungibile, uso IP di fallback: $fallbackIp")
-        return "http://$fallbackIp:$SERVER_PORT/"
+        // 2. Ottieni l'IP del dispositivo e scansiona la sua subnet
+         val deviceIp = getDeviceIpAddress(context)
+         if (deviceIp != null) {
+             Log.d(TAG, "IP del dispositivo: $deviceIp")
+             val subnet = getSubnetFromIp(deviceIp)
+             Log.d(TAG, "Scansione subnet: $subnet")
+             
+             // Scansiona gli IP più comuni nella subnet (inclusi quelli dai log del server)
+             val commonLastOctets = listOf(1, 99, 100, 101, 102, 150, 200, 251, 254)
+             for (lastOctet in commonLastOctets) {
+                 val testIp = "$subnet.$lastOctet"
+                 Log.d(TAG, "Provo IP subnet: $testIp:$SERVER_PORT")
+                 if (isFlaskServerRunning(testIp)) {
+                     val serverUrl = "http://$testIp:$SERVER_PORT/"
+                     Log.d(TAG, "Server Flask trovato nella subnet: $serverUrl")
+                     return serverUrl
+                 }
+             }
+         }
+         
+         // 3. Prova IP specifici dai log del server come ultima risorsa
+         val logIps = listOf("192.168.1.251", "192.168.1.99")
+         for (ip in logIps) {
+             Log.d(TAG, "Provo IP dai log: $ip:$SERVER_PORT")
+             if (isFlaskServerRunning(ip)) {
+                 val serverUrl = "http://$ip:$SERVER_PORT/"
+                 Log.d(TAG, "Server Flask trovato dai log: $serverUrl")
+                 return serverUrl
+             }
+         }
+        
+        // 4. Se non trovato, usa l'IP di fallback
+         val fallbackUrl = "http://127.0.0.1:$SERVER_PORT/"
+         Log.w(TAG, "Server Flask non trovato automaticamente, uso fallback: $fallbackUrl")
+         return fallbackUrl
     }
     
     // Ottieni l'indirizzo IPv4 del dispositivo
-    private fun getHostIpAddress(context: Context): String? {
-        try {
+    private fun getDeviceIpAddress(context: Context): String? {
+        return try {
             val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
             val wifiInfo = wifiManager.connectionInfo
-            val ipAddress = wifiInfo.ipAddress
+            val ipInt = wifiInfo.ipAddress
             
-            // Converti l'indirizzo IP da int a formato stringa
-            return String.format(
+            // Converte l'IP da intero a stringa
+            val ip = String.format(
                 "%d.%d.%d.%d",
-                ipAddress and 0xff,
-                ipAddress shr 8 and 0xff,
-                ipAddress shr 16 and 0xff,
-                ipAddress shr 24 and 0xff
+                (ipInt and 0xff),
+                (ipInt shr 8 and 0xff),
+                (ipInt shr 16 and 0xff),
+                (ipInt shr 24 and 0xff)
             )
+            
+            Log.d(TAG, "IP del dispositivo Android: $ip")
+            ip
         } catch (e: Exception) {
             Log.e(TAG, "Errore nell'ottenere l'IP del dispositivo: ${e.message}")
-            return null
+            null
         }
+    }
+    
+    private fun getSubnetFromIp(ip: String): String {
+        val parts = ip.split(".")
+        return if (parts.size >= 3) {
+            "${parts[0]}.${parts[1]}.${parts[2]}"
+        } else {
+            "192.168.1" // Fallback subnet
+        }
+    }
+    
+    // Mantieni la funzione originale per compatibilità
+    private fun getHostIpAddress(context: Context): String? {
+        return getDeviceIpAddress(context)
     }
     
     // Verifica se il server è raggiungibile
@@ -187,36 +213,40 @@ object RetrofitClient {
     
     // Verifica se il server Flask è in esecuzione su un determinato IP
     private fun isFlaskServerRunning(ipAddress: String): Boolean {
-        try {
-            // Prima verifica se l'host è raggiungibile
-            if (!isServerReachable(ipAddress)) {
-                return false
-            }
-            
-            // Crea un client HTTP per verificare se il server Flask risponde
+        return try {
+            // Prova a fare una connessione HTTP diretta al server Flask
+            val url = "http://$ipAddress:$SERVER_PORT/"
             val client = OkHttpClient.Builder()
                 .connectTimeout(2, TimeUnit.SECONDS)
                 .readTimeout(2, TimeUnit.SECONDS)
+                .writeTimeout(2, TimeUnit.SECONDS)
                 .build()
-                
+            
             val request = Request.Builder()
-                .url("http://$ipAddress:$SERVER_PORT/")
+                .url(url)
+                .get()
                 .build()
-                
-            // Esegui la richiesta in modo sincrono (siamo già in un thread separato)
+            
             val response = client.newCall(request).execute()
-            
-            // Verifica se la risposta è valida
-            val isRunning = response.isSuccessful
-            
-            // Chiudi la risposta per liberare risorse
+            val responseBody = response.body?.string()
             response.close()
             
-            return isRunning
+            // Verifica se la risposta contiene indicatori del server Flask
+            val isFlaskServer = response.isSuccessful && 
+                               (responseBody?.contains("status") == true || 
+                                responseBody?.contains("ok") == true ||
+                                response.code == 200)
+            
+            if (isFlaskServer) {
+                Log.d(TAG, "✓ Server Flask TROVATO su $ipAddress:$SERVER_PORT")
+            } else {
+                Log.d(TAG, "✗ Server Flask NON TROVATO su $ipAddress:$SERVER_PORT (code: ${response.code})")
+            }
+            
+            isFlaskServer
         } catch (e: Exception) {
-            // Se si verifica un'eccezione, il server non è raggiungibile
-            Log.d(TAG, "Server non trovato su $ipAddress: ${e.message}")
-            return false
+            Log.d(TAG, "✗ Server Flask su $ipAddress:$SERVER_PORT NON RAGGIUNGIBILE: ${e.message}")
+            false
         }
     }
 
