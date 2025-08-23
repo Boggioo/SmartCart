@@ -3,6 +3,7 @@ package com.example.smartcart.ui.profile
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.MenuItem
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -29,6 +30,9 @@ class MyListsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_shared_lists)
+        
+        // Abilita la freccia indietro nella barra dell'app
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         session = SessionManager(this)
         
@@ -90,6 +94,15 @@ class MyListsActivity : AppCompatActivity() {
                 tvEmpty.visibility = View.VISIBLE
             }
         })
+    }
+    
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        // Gestisce il click sulla freccia indietro
+        if (item.itemId == android.R.id.home) {
+            finish()
+            return true
+        }
+        return super.onOptionsItemSelected(item)
     }
     
     private fun deleteList(listId: Int, position: Int) {

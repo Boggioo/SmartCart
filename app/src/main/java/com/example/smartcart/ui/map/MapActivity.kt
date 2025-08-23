@@ -2,13 +2,20 @@ package com.example.smartcart.ui.map
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.view.MenuItem
 import android.graphics.Color
 import android.location.Location
+import android.net.Uri
 import android.os.Bundle
 import android.preference.PreferenceManager
+import android.provider.Settings
 import android.view.animation.AnimationUtils
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -30,10 +37,33 @@ import retrofit2.Response
 
 class MapActivity : AppCompatActivity() {
 
+    // Gestione del pulsante indietro nella ActionBar
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == android.R.id.home) {
+            onBackPressed()
+            return true
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
     private lateinit var map: MapView
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var session: SessionManager
     private val LOCATION_PERMISSION_REQUEST_CODE = 1
+    
+    // Launcher per la richiesta dei permessi di localizzazione
+    private val requestPermissionLauncher: ActivityResultLauncher<Array<String>> =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            val locationPermissionGranted = permissions.entries.any { it.value }
+            
+            if (locationPermissionGranted) {
+                // Permesso concesso, ottieni la posizione
+                getLastLocation()
+            } else {
+                // Permesso negato, mostra un dialogo per spiegare perché è necessario
+                showPermissionDeniedDialog()
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,6 +74,9 @@ class MapActivity : AppCompatActivity() {
         Configuration.getInstance().userAgentValue = packageName
         
         setContentView(R.layout.activity_map)
+        
+        // Abilita il pulsante indietro nella ActionBar
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         // Inizializza il gestore della sessione
         session = SessionManager(this)
@@ -57,12 +90,79 @@ class MapActivity : AppCompatActivity() {
         map.setMultiTouchControls(true)
         map.controller.setZoom(14.0)
         
-        // Verifica i permessi di localizzazione
-        if (hasLocationPermission()) {
-            getLastLocation()
-        } else {
-            requestLocationPermission()
+        // Richiedi i permessi di localizzazione usando il nuovo sistema
+        checkAndRequestLocationPermissions()
+    }
+    
+    private fun checkAndRequestLocationPermissions() {
+        when {
+            // Verifica se abbiamo già i permessi
+            ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED -> {
+                // Abbiamo già i permessi, ottieni la posizione
+                getLastLocation()
+            }
+            
+            // Verifica se dobbiamo mostrare una spiegazione
+            ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION) -> {
+                // Mostra una spiegazione all'utente
+                AlertDialog.Builder(this)
+                    .setTitle("Permesso di localizzazione necessario")
+                    .setMessage("Per mostrare i supermercati vicini, l'app ha bisogno di accedere alla tua posizione.")
+                    .setPositiveButton("OK") { _, _ ->
+                        // Richiedi i permessi
+                        requestPermissionLauncher.launch(
+                            arrayOf(
+                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.ACCESS_COARSE_LOCATION
+                            )
+                        )
+                    }
+                    .setNegativeButton("Annulla") { dialog, _ ->
+                        dialog.dismiss()
+                        Toast.makeText(
+                            this,
+                            "Impossibile mostrare i supermercati vicini senza permessi di localizzazione",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                    .create()
+                    .show()
+            }
+            
+            // Altrimenti, richiedi direttamente i permessi
+            else -> {
+                requestPermissionLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    )
+                )
+            }
         }
+    }
+    
+    private fun showPermissionDeniedDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Permesso negato")
+            .setMessage("Senza il permesso di localizzazione, non possiamo mostrarti i supermercati vicini. Vuoi abilitare il permesso nelle impostazioni?")
+            .setPositiveButton("Impostazioni") { _, _ ->
+                // Apri le impostazioni dell'app
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                val uri = Uri.fromParts("package", packageName, null)
+                intent.data = uri
+                startActivity(intent)
+            }
+            .setNegativeButton("No, grazie") { dialog, _ ->
+                dialog.dismiss()
+                Toast.makeText(
+                    this,
+                    "Impossibile mostrare i supermercati vicini senza permessi di localizzazione",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+            .create()
+            .show()
     }
     
     override fun onResume() {
@@ -83,9 +183,23 @@ class MapActivity : AppCompatActivity() {
     }
 
     private fun requestLocationPermission() {
+        // Verifica se dobbiamo mostrare la spiegazione prima di richiedere il permesso
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+            // Mostra una spiegazione all'utente *in modo asincrono*
+            Toast.makeText(
+                this,
+                "La localizzazione è necessaria per mostrare i supermercati vicini",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+        
+        // Richiedi sia ACCESS_FINE_LOCATION che ACCESS_COARSE_LOCATION
         ActivityCompat.requestPermissions(
             this,
-            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ),
             LOCATION_PERMISSION_REQUEST_CODE
         )
     }
@@ -97,7 +211,13 @@ class MapActivity : AppCompatActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            // Controlla se almeno uno dei permessi è stato concesso
+            val locationPermissionGranted = grantResults.isNotEmpty() && 
+                (grantResults[0] == PackageManager.PERMISSION_GRANTED || 
+                (grantResults.size > 1 && grantResults[1] == PackageManager.PERMISSION_GRANTED))
+            
+            if (locationPermissionGranted) {
+                // Permesso concesso, ottieni la posizione
                 getLastLocation()
             } else {
                 Toast.makeText(
@@ -110,44 +230,55 @@ class MapActivity : AppCompatActivity() {
     }
 
     private fun getLastLocation() {
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
+        // Verifica se abbiamo i permessi necessari
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // Se non abbiamo i permessi, richiediamoli di nuovo
+            requestLocationPermission()
             return
         }
 
-        fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
-            location?.let {
-                val currentGeoPoint = GeoPoint(it.latitude, it.longitude)
-                map.controller.setCenter(currentGeoPoint)
-                
-                // Aggiungi un marker per la posizione attuale
-                val marker = Marker(map)
-                marker.position = currentGeoPoint
-                marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                marker.title = "La tua posizione"
-                
-                // Personalizza il marker della posizione utente
-                val userIcon = ContextCompat.getDrawable(this, R.drawable.ic_my_location)
-                userIcon?.setTint(Color.BLUE) // Colora l'icona in blu
-                marker.icon = userIcon
-                
-                // Applica l'animazione di rimbalzo al marker della posizione
-                applyBounceAnimation(marker)
-                
-                map.overlays.add(marker)
-                
-                fetchNearbySupermarkets(it.latitude, it.longitude)
-            } ?: run {
+        // Mostra un messaggio all'utente
+        Toast.makeText(this, "Ricerca della tua posizione in corso...", Toast.LENGTH_SHORT).show()
+
+        fusedLocationClient.lastLocation
+            .addOnSuccessListener { location: Location? ->
+                location?.let {
+                    val currentGeoPoint = GeoPoint(it.latitude, it.longitude)
+                    map.controller.setCenter(currentGeoPoint)
+                    
+                    // Aggiungi un marker per la posizione attuale
+                    val marker = Marker(map)
+                    marker.position = currentGeoPoint
+                    marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                    marker.title = "La tua posizione"
+                    
+                    // Personalizza il marker della posizione utente
+                    val userIcon = ContextCompat.getDrawable(this, R.drawable.ic_my_location)
+                    userIcon?.setTint(Color.BLUE) // Colora l'icona in blu
+                    marker.icon = userIcon
+                    
+                    // Applica l'animazione di rimbalzo al marker della posizione
+                    applyBounceAnimation(marker)
+                    
+                    map.overlays.add(marker)
+                    
+                    fetchNearbySupermarkets(it.latitude, it.longitude)
+                } ?: run {
+                    Toast.makeText(
+                        this,
+                        "Impossibile ottenere la posizione attuale. Assicurati che la localizzazione sia attiva nelle impostazioni del dispositivo.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+            .addOnFailureListener { e ->
                 Toast.makeText(
                     this,
-                    "Impossibile ottenere la posizione attuale. Riprova più tardi.",
+                    "Errore durante l'accesso alla posizione: ${e.message}",
                     Toast.LENGTH_LONG
                 ).show()
             }
-        }
     }
     
     /**

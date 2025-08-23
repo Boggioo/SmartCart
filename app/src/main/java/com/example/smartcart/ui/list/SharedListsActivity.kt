@@ -2,6 +2,7 @@ package com.example.smartcart.ui.list
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.MenuItem
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
@@ -16,6 +17,15 @@ import retrofit2.Callback
 import retrofit2.Response
 
 class SharedListsActivity : AppCompatActivity() {
+    
+    // Gestione del pulsante indietro nella ActionBar
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == android.R.id.home) {
+            onBackPressed()
+            return true
+        }
+        return super.onOptionsItemSelected(item)
+    }
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var tvNoSharedLists: TextView
@@ -25,6 +35,9 @@ class SharedListsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_shared_lists)
+        
+        // Abilita il pulsante indietro nella ActionBar
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         session = SessionManager(this)
         

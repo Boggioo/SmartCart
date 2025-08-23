@@ -1,5 +1,6 @@
 package com.example.smartcart.ui.list
 
+import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -25,6 +26,15 @@ import java.util.Timer
 import java.util.TimerTask
 
 class CreatedListActivity : AppCompatActivity() {
+    
+    // Gestione del pulsante indietro nella ActionBar
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == android.R.id.home) {
+            onBackPressed()
+            return true
+        }
+        return super.onOptionsItemSelected(item)
+    }
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var recyclerViewCompleted: RecyclerView
@@ -45,6 +55,9 @@ class CreatedListActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_created_list)
+        
+        // Abilita il pulsante indietro nella ActionBar
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         session = SessionManager(this)
         listId = intent.getIntExtra("listId", intent.getIntExtra("list_id", -1))
@@ -115,6 +128,7 @@ class CreatedListActivity : AppCompatActivity() {
     private fun authHeader(): String = "Bearer ${session.getToken()}"
 
     private fun loadItems() {
+        // Utilizzo OkHttp per disabilitare la cache e forzare un aggiornamento dal server
         RetrofitClient.api().getItems(authHeader(), listId).enqueue(object : Callback<List<Item>> {
             override fun onResponse(call: Call<List<Item>>, response: Response<List<Item>>) {
                 // Ferma l'indicatore di aggiornamento
@@ -147,7 +161,7 @@ class CreatedListActivity : AppCompatActivity() {
         // Cancella eventuali timer esistenti
         stopAutoRefresh()
         
-        // Crea un nuovo timer che si attiva ogni 30 secondi
+        // Crea un nuovo timer che si attiva ogni 5 secondi per garantire una sincronizzazione più frequente
         refreshTimer = Timer().apply {
             schedule(object : TimerTask() {
                 override fun run() {
@@ -158,7 +172,7 @@ class CreatedListActivity : AppCompatActivity() {
                         }
                     }
                 }
-            }, 0, 30000) // 30 secondi
+            }, 0, 5000) // 5 secondi per una sincronizzazione più rapida
         }
     }
     
@@ -198,6 +212,9 @@ class CreatedListActivity : AppCompatActivity() {
                         recyclerView.scrollToPosition(0)
                         etItemName.setText("")
                         etQuantity.setText("1")
+                        
+                        // Forza un aggiornamento completo per sincronizzare con altri utenti
+                        loadItems()
                     } else {
                         Toast.makeText(this@CreatedListActivity, "Errore aggiunta (${response.code()})", Toast.LENGTH_SHORT).show()
                     }
@@ -229,6 +246,9 @@ class CreatedListActivity : AppCompatActivity() {
                         
                         // Aggiorna la visibilità dell'intestazione degli elementi completati
                         tvCompletedHeader.visibility = if (completedAdapter.itemCount == 0) android.view.View.GONE else android.view.View.VISIBLE
+                        
+                        // Forza un aggiornamento completo per sincronizzare con altri utenti
+                        loadItems()
                     } else {
                         Toast.makeText(this@CreatedListActivity, "Errore aggiornamento (${response.code()})", Toast.LENGTH_SHORT).show()
                     }
@@ -253,6 +273,9 @@ class CreatedListActivity : AppCompatActivity() {
                             adapter.removeAt(position)
                         }
                         Toast.makeText(this@CreatedListActivity, "${item.name} rimosso", Toast.LENGTH_SHORT).show()
+                        
+                        // Forza un aggiornamento completo per sincronizzare con altri utenti
+                        loadItems()
                     } else {
                         Toast.makeText(this@CreatedListActivity, "Errore eliminazione (${response.code()})", Toast.LENGTH_SHORT).show()
                     }

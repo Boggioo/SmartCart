@@ -53,6 +53,18 @@ object RetrofitClient {
     private val client = OkHttpClient.Builder()
         .addInterceptor(logger)
         .addInterceptor(customInterceptor)
+        .addInterceptor { chain ->
+            // Disabilita la cache per tutte le richieste
+            val request = chain.request().newBuilder()
+                .header("Cache-Control", "no-cache")
+                .header("Pragma", "no-cache")
+                .build()
+            chain.proceed(request)
+        }
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
+        .cache(null) // Disabilita completamente la cache
         .build()
         
     // Configurazione personalizzata di Gson per garantire la corretta serializzazione
