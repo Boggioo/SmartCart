@@ -15,20 +15,28 @@ import java.net.InetAddress
 import java.nio.charset.Charset
 import java.util.concurrent.TimeUnit
 
+/**
+ * Client Retrofit per la gestione delle comunicazioni HTTP con il backend Flask.
+ * Implementa la scoperta automatica del server sulla rete locale e gestisce
+ * la configurazione dinamica dell'URL di base.
+ */
 object RetrofitClient {
-    // Porta del server Flask
+    /** Porta del server Flask backend */
     private const val SERVER_PORT = "5000"
+    /** Tag per i log di debug */
     private const val TAG = "RetrofitClient"
     
-    // URL di base dinamico che verrà impostato in base all'IP del server
+    /** URL di base dinamico che viene impostato in base all'IP del server scoperto */
     private var baseUrl = ""
+    /** Istanza Retrofit per le chiamate API */
     private var retrofit: Retrofit? = null
 
+    /** Interceptor per il logging delle richieste HTTP */
     private val logger = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
     }
     
-    // Interceptor personalizzato per log dettagliati
+    /** Interceptor personalizzato per log dettagliati delle richieste e risposte */
     private val customInterceptor = Interceptor { chain ->
         val request = chain.request()
         
@@ -72,7 +80,12 @@ object RetrofitClient {
         .serializeNulls() // Serializza anche i valori null
         .create()
 
-    // Inizializza il client Retrofit con l'indirizzo IP del server
+    /**
+     * Inizializza il client Retrofit con scoperta automatica del server Flask.
+     * Avvia la ricerca del server in background e configura un URL di fallback temporaneo.
+     * 
+     * @param context Contesto dell'applicazione per accedere ai servizi di sistema
+     */
     fun initialize(context: Context) {
         // Imposta un timeout più lungo per le connessioni
         val clientBuilder = OkHttpClient.Builder()
@@ -117,7 +130,13 @@ object RetrofitClient {
             .build()
     }
     
-    // Scopre automaticamente l'IP del server Flask scansionando la rete locale
+    /**
+     * Scopre automaticamente l'IP del server Flask scansionando la rete locale.
+     * Prova prima gli IP standard, poi scansiona la subnet del dispositivo.
+     * 
+     * @param context Contesto per accedere ai servizi di rete
+     * @return URL completo del server Flask scoperto
+     */
     private fun discoverFlaskServer(context: Context): String {
         Log.d(TAG, "Avvio scoperta automatica del server Flask...")
         
@@ -174,7 +193,12 @@ object RetrofitClient {
          return fallbackUrl
     }
     
-    // Ottieni l'indirizzo IPv4 del dispositivo
+    /**
+     * Ottiene l'indirizzo IPv4 del dispositivo Android tramite WiFiManager.
+     * 
+     * @param context Contesto per accedere al WiFiManager
+     * @return Indirizzo IP del dispositivo o null se non disponibile
+     */
     private fun getDeviceIpAddress(context: Context): String? {
         return try {
             val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
@@ -198,6 +222,12 @@ object RetrofitClient {
         }
     }
     
+    /**
+     * Estrae la subnet (primi tre ottetti) da un indirizzo IP.
+     * 
+     * @param ip Indirizzo IP completo
+     * @return Subnet nel formato "xxx.xxx.xxx"
+     */
     private fun getSubnetFromIp(ip: String): String {
         val parts = ip.split(".")
         return if (parts.size >= 3) {
@@ -207,12 +237,22 @@ object RetrofitClient {
         }
     }
     
-    // Mantieni la funzione originale per compatibilità
+    /**
+     * Funzione di compatibilità per ottenere l'IP del dispositivo.
+     * 
+     * @param context Contesto dell'applicazione
+     * @return Indirizzo IP del dispositivo
+     */
     private fun getHostIpAddress(context: Context): String? {
         return getDeviceIpAddress(context)
     }
     
-    // Verifica se il server è raggiungibile
+    /**
+     * Verifica se un server è raggiungibile tramite ping ICMP.
+     * 
+     * @param ipAddress Indirizzo IP da testare
+     * @return true se il server è raggiungibile, false altrimenti
+     */
     private fun isServerReachable(ipAddress: String): Boolean {
         return try {
             val address = InetAddress.getByName(ipAddress)
@@ -223,7 +263,13 @@ object RetrofitClient {
         }
     }
     
-    // Verifica se il server Flask è in esecuzione su un determinato IP
+    /**
+     * Verifica se il server Flask è in esecuzione su un determinato IP
+     * effettuando una richiesta HTTP diretta.
+     * 
+     * @param ipAddress Indirizzo IP da testare
+     * @return true se il server Flask risponde correttamente, false altrimenti
+     */
     private fun isFlaskServerRunning(ipAddress: String): Boolean {
         return try {
             // Prova a fare una connessione HTTP diretta al server Flask
@@ -262,6 +308,12 @@ object RetrofitClient {
         }
     }
 
+    /**
+     * Restituisce un'istanza del servizio API per effettuare chiamate HTTP.
+     * 
+     * @return Istanza di ApiService configurata
+     * @throws IllegalStateException se RetrofitClient non è stato inizializzato
+     */
     fun api(): ApiService {
         if (retrofit == null) {
             throw IllegalStateException("RetrofitClient non è stato inizializzato. Chiama initialize() prima di usare api().")

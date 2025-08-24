@@ -4,8 +4,16 @@ import android.app.Application
 import android.util.Log
 import com.example.smartcart.data.network.RetrofitClient
 
+/**
+ * Classe principale dell'applicazione SmartCart.
+ * Estende Application per gestire l'inizializzazione globale dei componenti.
+ */
 class SmartCartApp : Application() {
     
+    /**
+     * Metodo chiamato alla creazione dell'applicazione.
+     * Inizializza i componenti globali necessari per il funzionamento dell'app.
+     */
     override fun onCreate() {
         super.onCreate()
         

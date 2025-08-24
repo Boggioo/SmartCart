@@ -16,9 +16,15 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
+/**
+ * Activity per visualizzare le liste della spesa condivise da altri utenti.
+ * Permette di visualizzare e accedere alle liste condivise con l'utente corrente.
+ */
 class SharedListsActivity : AppCompatActivity() {
     
-    // Gestione del pulsante indietro nella ActionBar
+    /**
+     * Gestisce la selezione degli elementi del menu, incluso il pulsante indietro.
+     */
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == android.R.id.home) {
             onBackPressed()
@@ -27,11 +33,18 @@ class SharedListsActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
+    /** RecyclerView per visualizzare le liste condivise */
     private lateinit var recyclerView: RecyclerView
+    /** TextView mostrato quando non ci sono liste condivise */
     private lateinit var tvNoSharedLists: TextView
+    /** Gestore della sessione utente */
     private lateinit var session: SessionManager
+    /** Adapter per la RecyclerView delle liste condivise */
     private lateinit var adapter: SharedListAdapter
 
+    /**
+     * Inizializza l'activity configurando le viste e caricando le liste condivise.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_shared_lists)
@@ -60,8 +73,13 @@ class SharedListsActivity : AppCompatActivity() {
         loadSharedLists()
     }
     
+    /** Genera l'header di autenticazione per le richieste API */
     private fun authHeader(): String = "Bearer ${session.getToken()}"
     
+    /**
+     * Carica le liste condivise dal server e aggiorna l'interfaccia utente.
+     * Mostra un messaggio se non ci sono liste condivise o gestisce gli errori.
+     */
     private fun loadSharedLists() {
         RetrofitClient.api().getSharedLists(authHeader()).enqueue(object : Callback<List<Map<String, Any>>> {
             override fun onResponse(call: Call<List<Map<String, Any>>>, response: Response<List<Map<String, Any>>>) {

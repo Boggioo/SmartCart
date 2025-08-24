@@ -17,12 +17,24 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.smartcart.ui.list.SharedListsActivity
 import android.widget.TextView
 
+/**
+ * Activity principale per la gestione delle liste della spesa.
+ * Fornisce funzionalità per creare nuove liste, navigare verso il profilo utente,
+ * visualizzare le liste condivise e trovare supermercati vicini.
+ */
 class ListActivity : AppCompatActivity() {
-    // Gestore della sessione
+    /** Gestore della sessione utente */
     private lateinit var session: SessionManager
+    /** Pulsante per creare una nuova lista */
     private lateinit var btnCreateList: Button
+    /** Pulsante per accedere al profilo utente */
     private lateinit var btnProfile: Button
+    /** Pulsante per accedere alle liste condivise */
     private lateinit var btnSharedLists: Button
+    /**
+     * Metodo chiamato alla creazione dell'activity.
+     * Inizializza le viste e configura i listener per i controlli UI.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_list)
@@ -46,6 +58,10 @@ class ListActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Configura i listener per tutti i pulsanti dell'interfaccia.
+     * Include la navigazione verso le diverse sezioni dell'app.
+     */
     private fun setupButtons() {
         // Bottone "Crea nuova lista"
         findViewById<Button>(R.id.btnCreateList).setOnClickListener {
@@ -65,6 +81,10 @@ class ListActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Mostra un dialog per l'inserimento del nome di una nuova lista.
+     * Valida l'input dell'utente prima di procedere con la creazione.
+     */
     private fun promptCreateList() {
         val input = EditText(this).apply {
             hint = "Nome lista"
@@ -90,6 +110,13 @@ class ListActivity : AppCompatActivity() {
             .show()
     }
 
+    /**
+     * Crea una nuova lista tramite chiamata API.
+     * Gestisce l'autenticazione, mostra indicatori di caricamento e
+     * naviga verso l'activity della lista creata in caso di successo.
+     * 
+     * @param name Nome della lista da creare
+     */
     private fun createList(name: String) {
         val token = "Bearer ${session.getToken()}"
         

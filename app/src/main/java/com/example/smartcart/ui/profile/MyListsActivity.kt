@@ -19,14 +19,26 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
+/**
+ * Activity che gestisce la visualizzazione e gestione delle liste create dall'utente.
+ * Permette di visualizzare, aprire ed eliminare le liste personali.
+ */
 class MyListsActivity : AppCompatActivity() {
 
+    /** Gestore della sessione utente per l'autenticazione */
     private lateinit var session: SessionManager
+    /** Adapter per la RecyclerView delle liste */
     private lateinit var adapter: ListAdapter
+    /** RecyclerView per visualizzare le liste */
     private lateinit var recyclerView: RecyclerView
+    /** Indicatore di caricamento */
     private lateinit var progressBar: ProgressBar
+    /** TextView per messaggi quando non ci sono liste */
     private lateinit var tvEmpty: TextView
 
+    /**
+     * Inizializza l'activity configurando le viste e caricando le liste dell'utente.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_shared_lists)
@@ -60,6 +72,10 @@ class MyListsActivity : AppCompatActivity() {
         loadLists()
     }
     
+    /**
+     * Carica le liste dell'utente dal server tramite chiamata API.
+     * Gestisce la visualizzazione del caricamento e degli stati vuoti o di errore.
+     */
     private fun loadLists() {
         progressBar.visibility = View.VISIBLE
         recyclerView.visibility = View.GONE
@@ -96,6 +112,9 @@ class MyListsActivity : AppCompatActivity() {
         })
     }
     
+    /**
+     * Gestisce la selezione degli elementi del menu, in particolare il pulsante indietro.
+     */
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         // Gestisce il click sulla freccia indietro
         if (item.itemId == android.R.id.home) {
@@ -105,6 +124,11 @@ class MyListsActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
     
+    /**
+     * Elimina una lista specifica dopo conferma dell'utente.
+     * @param listId ID della lista da eliminare
+     * @param position Posizione della lista nell'adapter
+     */
     private fun deleteList(listId: Int, position: Int) {
         AlertDialog.Builder(this)
             .setTitle("Elimina lista")

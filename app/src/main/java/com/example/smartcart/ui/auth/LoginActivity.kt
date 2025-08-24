@@ -18,13 +18,27 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
+/**
+ * Activity per la gestione dell'autenticazione degli utenti.
+ * Permette agli utenti di effettuare il login con email e password,
+ * gestisce la validazione dei campi e la navigazione verso la registrazione.
+ */
 class LoginActivity : AppCompatActivity() {
+    /** Campo di input per l'email dell'utente */
     private lateinit var etEmail: EditText
+    /** Campo di input per la password dell'utente */
     private lateinit var etPassword: EditText
+    /** Pulsante per effettuare il login */
     private lateinit var btnLogin: Button
+    /** TextView per navigare alla schermata di registrazione */
     private lateinit var tvGoRegister: TextView
+    /** Gestore della sessione utente */
     private lateinit var session: SessionManager
 
+    /**
+     * Metodo chiamato alla creazione dell'activity.
+     * Inizializza le viste e configura i listener per i controlli UI.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
@@ -66,12 +80,16 @@ class LoginActivity : AppCompatActivity() {
         }
     }
     
-    // Costante per il codice di richiesta
+    /** Oggetto companion per le costanti della classe */
     companion object {
+        /** Codice di richiesta per l'activity di registrazione */
         private const val REGISTER_REQUEST_CODE = 100
     }
     
-    // Gestione del risultato dell'attività di registrazione
+    /**
+     * Gestisce il risultato dell'activity di registrazione.
+     * Se la registrazione è avvenuta con successo, precompila il campo email.
+     */
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REGISTER_REQUEST_CODE && resultCode == RESULT_OK) {
@@ -88,6 +106,13 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Effettua il login dell'utente tramite chiamata API.
+     * Gestisce la risposta del server e salva i dati di sessione in caso di successo.
+     * 
+     * @param email Email dell'utente
+     * @param password Password dell'utente
+     */
     private fun login(email: String, password: String) {
         // Prepara i dati per la richiesta
         val loginData = mapOf("email" to email, "password" to password)
@@ -151,6 +176,9 @@ class LoginActivity : AppCompatActivity() {
                 }
             }
 
+            /**
+             * Gestisce gli errori di connessione durante la chiamata API.
+             */
             override fun onFailure(call: Call<Map<String, Any>>, t: Throwable) {
                 progressDialog.dismiss()
                 android.util.Log.e("LoginActivity", "Errore di connessione: ${t.message}")

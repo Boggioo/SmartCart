@@ -35,9 +35,16 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
+/**
+ * Activity che gestisce la visualizzazione della mappa con i supermercati nelle vicinanze.
+ * Utilizza OpenStreetMap per mostrare la posizione dell'utente e i supermercati circostanti.
+ * Richiede permessi di localizzazione per funzionare correttamente.
+ */
 class MapActivity : AppCompatActivity() {
 
-    // Gestione del pulsante indietro nella ActionBar
+    /**
+     * Gestisce la selezione degli elementi del menu, incluso il pulsante indietro.
+     */
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == android.R.id.home) {
             onBackPressed()
@@ -46,12 +53,16 @@ class MapActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
+    /** Vista della mappa OpenStreetMap */
     private lateinit var map: MapView
+    /** Client per ottenere la posizione del dispositivo */
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    /** Gestore della sessione utente */
     private lateinit var session: SessionManager
+    /** Codice di richiesta per i permessi di localizzazione */
     private val LOCATION_PERMISSION_REQUEST_CODE = 1
     
-    // Launcher per la richiesta dei permessi di localizzazione
+    /** Launcher per la richiesta dei permessi di localizzazione */
     private val requestPermissionLauncher: ActivityResultLauncher<Array<String>> =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
             val locationPermissionGranted = permissions.entries.any { it.value }
@@ -65,6 +76,9 @@ class MapActivity : AppCompatActivity() {
             }
         }
 
+    /**
+     * Inizializza l'activity configurando la mappa e richiedendo i permessi necessari.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
@@ -94,6 +108,9 @@ class MapActivity : AppCompatActivity() {
         checkAndRequestLocationPermissions()
     }
     
+    /**
+     * Verifica e richiede i permessi di localizzazione necessari.
+     */
     private fun checkAndRequestLocationPermissions() {
         when {
             // Verifica se abbiamo già i permessi
@@ -142,6 +159,9 @@ class MapActivity : AppCompatActivity() {
         }
     }
     
+    /**
+     * Mostra un dialogo quando i permessi di localizzazione vengono negati.
+     */
     private fun showPermissionDeniedDialog() {
         AlertDialog.Builder(this)
             .setTitle("Permesso negato")
@@ -165,16 +185,25 @@ class MapActivity : AppCompatActivity() {
             .show()
     }
     
+    /**
+     * Riprende l'activity e la mappa quando torna in primo piano.
+     */
     override fun onResume() {
         super.onResume()
         map.onResume()
     }
     
+    /**
+     * Mette in pausa l'activity e la mappa quando va in background.
+     */
     override fun onPause() {
         super.onPause()
         map.onPause()
     }
 
+    /**
+     * Verifica se l'app ha i permessi di localizzazione.
+     */
     private fun hasLocationPermission(): Boolean {
         return ContextCompat.checkSelfPermission(
             this,
@@ -182,6 +211,9 @@ class MapActivity : AppCompatActivity() {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
+    /**
+     * Richiede i permessi di localizzazione all'utente.
+     */
     private fun requestLocationPermission() {
         // Verifica se dobbiamo mostrare la spiegazione prima di richiedere il permesso
         if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
@@ -204,6 +236,9 @@ class MapActivity : AppCompatActivity() {
         )
     }
 
+    /**
+     * Gestisce il risultato della richiesta dei permessi.
+     */
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -229,6 +264,9 @@ class MapActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Ottiene l'ultima posizione conosciuta del dispositivo e centra la mappa su di essa.
+     */
     private fun getLastLocation() {
         // Verifica se abbiamo i permessi necessari
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
@@ -284,11 +322,20 @@ class MapActivity : AppCompatActivity() {
     /**
      * Applica un'animazione di rimbalzo a un marker
      */
+    /**
+     * Applica un'animazione di rimbalzo a un marker.
+     */
     private fun applyBounceAnimation(marker: Marker) {
         val bounceAnimation = AnimationUtils.loadAnimation(this, R.anim.bounce)
         marker.infoWindow?.view?.startAnimation(bounceAnimation)
     }
 
+    /**
+     * Recupera i supermercati nelle vicinanze della posizione specificata.
+     * 
+     * @param latitude Latitudine della posizione
+     * @param longitude Longitudine della posizione
+     */
     private fun fetchNearbySupermarkets(latitude: Double, longitude: Double) {
         val token = "Bearer ${session.getToken()}"
 
@@ -340,6 +387,12 @@ class MapActivity : AppCompatActivity() {
     /**
      * Formatta la distanza in un formato più leggibile
      */
+    /**
+     * Formatta la distanza in un formato più leggibile.
+     * 
+     * @param distanceKm Distanza in chilometri
+     * @return Stringa formattata della distanza
+     */
     private fun formatDistance(distanceKm: Double): String {
         return when {
             distanceKm < 1.0 -> "${(distanceKm * 1000).toInt()} metri"
@@ -347,9 +400,14 @@ class MapActivity : AppCompatActivity() {
         }
     }
     
-    // Variabile per tenere traccia del marker attualmente selezionato
+    /** Variabile per tenere traccia del marker attualmente selezionato */
     private var selectedMarker: PulsatingMarker? = null
     
+    /**
+     * Visualizza i supermercati sulla mappa con marker personalizzati.
+     * 
+     * @param supermarkets Lista dei supermercati da visualizzare
+     */
     private fun displaySupermarkets(supermarkets: List<Supermarket>) {
         if (supermarkets.isEmpty()) {
             Toast.makeText(

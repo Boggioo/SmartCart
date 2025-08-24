@@ -18,15 +18,31 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
+/**
+ * Activity per la gestione della registrazione di nuovi utenti.
+ * Permette agli utenti di creare un nuovo account fornendo nome, email e password,
+ * gestisce la validazione dei campi e la navigazione verso il login.
+ */
 class RegisterActivity : AppCompatActivity() {
+    /** Campo di input per il nome dell'utente */
     private lateinit var etName: EditText
+    /** Campo di input per l'email dell'utente */
     private lateinit var etEmail: EditText
+    /** Campo di input per la password dell'utente */
     private lateinit var etPassword: EditText
+    /** Pulsante per effettuare la registrazione */
     private lateinit var btnRegister: Button
+    /** TextView per il login (non utilizzato) */
     private lateinit var tvLogin: TextView
+    /** Gestore della sessione utente */
     private lateinit var session: SessionManager
+    /** TextView per navigare alla schermata di login */
     private lateinit var tvLoginLink: TextView
 
+    /**
+     * Metodo chiamato alla creazione dell'activity.
+     * Inizializza le viste e configura i listener per i controlli UI.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register)
@@ -63,6 +79,15 @@ class RegisterActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Effettua la registrazione dell'utente tramite chiamata API.
+     * Gestisce la risposta del server, salva i dati di sessione in caso di successo
+     * e mostra un dialog per email già registrate.
+     * 
+     * @param name Nome dell'utente
+     * @param email Email dell'utente
+     * @param password Password dell'utente
+     */
     private fun register(name: String, email: String, password: String) {
         // Prepara i dati per la richiesta
         val registerData = mapOf(
@@ -144,6 +169,9 @@ class RegisterActivity : AppCompatActivity() {
                 }
             }
 
+            /**
+             * Gestisce gli errori di connessione durante la chiamata API.
+             */
             override fun onFailure(call: Call<Map<String, Any>>, t: Throwable) {
                 Toast.makeText(this@RegisterActivity, "Errore di connessione", Toast.LENGTH_SHORT).show()
             }

@@ -25,9 +25,17 @@ import retrofit2.Response
 import java.util.Timer
 import java.util.TimerTask
 
+/**
+ * Activity per la gestione di una lista della spesa specifica.
+ * Permette di visualizzare, aggiungere, modificare ed eliminare elementi dalla lista,
+ * gestisce la condivisione della lista con altri utenti e fornisce aggiornamenti automatici.
+ */
 class CreatedListActivity : AppCompatActivity() {
     
-    // Gestione del pulsante indietro nella ActionBar
+    /**
+     * Gestisce la selezione degli elementi del menu.
+     * Implementa la navigazione indietro tramite il pulsante home della ActionBar.
+     */
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == android.R.id.home) {
             onBackPressed()
@@ -36,22 +44,41 @@ class CreatedListActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
+    /** RecyclerView per gli elementi da comprare */
     private lateinit var recyclerView: RecyclerView
+    /** RecyclerView per gli elementi completati */
     private lateinit var recyclerViewCompleted: RecyclerView
+    /** TextView per l'intestazione degli elementi completati */
     private lateinit var tvCompletedHeader: TextView
+    /** Adapter per gli elementi da comprare */
     private lateinit var adapter: ItemAdapter
+    /** Adapter per gli elementi completati */
     private lateinit var completedAdapter: ItemAdapter
+    /** Campo di input per il nome dell'elemento */
     private lateinit var etItemName: EditText
+    /** Campo di input per la quantità dell'elemento */
     private lateinit var etQuantity: EditText
+    /** Pulsante per aggiungere un nuovo elemento */
     private lateinit var btnAddItem: Button
+    /** Pulsante per condividere la lista */
     private lateinit var btnShareList: Button
+    /** Layout per il refresh tramite swipe */
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
+    /** Gestore della sessione utente */
     private lateinit var session: SessionManager
+    /** ID della lista corrente */
     private var listId: Int = -1
+    /** Flag che indica se la lista è condivisa */
     private var isShared: Boolean = false
+    /** Timer per l'aggiornamento automatico */
     private var refreshTimer: Timer? = null
+    /** Handler per l'esecuzione di operazioni sul thread principale */
     private val handler = Handler(Looper.getMainLooper())
 
+    /**
+     * Metodo chiamato alla creazione dell'activity.
+     * Inizializza le viste, configura gli adapter e avvia l'aggiornamento automatico.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_created_list)
@@ -125,8 +152,13 @@ class CreatedListActivity : AppCompatActivity() {
         loadItems()
     }
 
+    /** Genera l'header di autorizzazione per le chiamate API */
     private fun authHeader(): String = "Bearer ${session.getToken()}"
 
+    /**
+     * Carica gli elementi della lista dal server.
+     * Separa gli elementi completati da quelli da completare e aggiorna le RecyclerView.
+     */
     private fun loadItems() {
         // Utilizzo OkHttp per disabilitare la cache e forzare un aggiornamento dal server
         RetrofitClient.api().getItems(authHeader(), listId).enqueue(object : Callback<List<Item>> {
@@ -157,6 +189,10 @@ class CreatedListActivity : AppCompatActivity() {
         })
     }
     
+    /**
+     * Avvia l'aggiornamento automatico della lista ogni 5 secondi.
+     * Garantisce la sincronizzazione in tempo reale con altri utenti.
+     */
     private fun startAutoRefresh() {
         // Cancella eventuali timer esistenti
         stopAutoRefresh()
@@ -176,23 +212,36 @@ class CreatedListActivity : AppCompatActivity() {
         }
     }
     
+    /**
+     * Ferma l'aggiornamento automatico della lista.
+     */
     private fun stopAutoRefresh() {
         refreshTimer?.cancel()
         refreshTimer = null
     }
     
+    /**
+     * Riavvia l'aggiornamento automatico quando l'activity torna in primo piano.
+     */
     override fun onResume() {
         super.onResume()
         // Riavvia il timer quando l'attività torna in primo piano
         startAutoRefresh()
     }
     
+    /**
+     * Ferma l'aggiornamento automatico quando l'activity va in background.
+     */
     override fun onPause() {
         super.onPause()
         // Ferma il timer quando l'attività va in background
         stopAutoRefresh()
     }
 
+    /**
+     * Gestisce l'aggiunta di un nuovo elemento alla lista.
+     * Valida l'input dell'utente e invia la richiesta al server.
+     */
     private fun onAddItemClicked() {
         val name = etItemName.text.toString().trim()
         val qtyText = etQuantity.text.toString().trim()
@@ -226,6 +275,13 @@ class CreatedListActivity : AppCompatActivity() {
             })
     }
 
+    /**
+     * Cambia lo stato di completamento di un elemento.
+     * Sposta l'elemento tra le liste "da fare" e "completati".
+     * 
+     * @param item Elemento da modificare
+     * @param position Posizione dell'elemento nella lista
+     */
     private fun toggleItemChecked(item: Item, position: Int) {
         val newChecked = !item.checked
         val body = mapOf("checked" to newChecked)
@@ -260,6 +316,13 @@ class CreatedListActivity : AppCompatActivity() {
             })
     }
 
+    /**
+     * Elimina un elemento dalla lista.
+     * Rimuove l'elemento sia localmente che dal server.
+     * 
+     * @param item Elemento da eliminare
+     * @param position Posizione dell'elemento nella lista
+     */
     private fun deleteItem(item: Item, position: Int) {
         RetrofitClient.api().deleteItem(authHeader(), item.id)
             .enqueue(object : Callback<Map<String, Any>> {
@@ -287,6 +350,10 @@ class CreatedListActivity : AppCompatActivity() {
             })
     }
     
+    /**
+     * Mostra un dialog per la condivisione della lista.
+     * Permette all'utente di inserire l'email del destinatario.
+     */
     private fun showShareDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_share_list, null)
         val etEmail = dialogView.findViewById<EditText>(R.id.etEmail)
@@ -309,6 +376,12 @@ class CreatedListActivity : AppCompatActivity() {
         dialog.show()
     }
     
+    /**
+     * Condivide la lista con un utente specificato tramite email.
+     * Invia la richiesta di condivisione al server.
+     * 
+     * @param email Email dell'utente con cui condividere la lista
+     */
     private fun shareList(email: String) {
         val body = mapOf(
             "list_id" to listId.toString(),
